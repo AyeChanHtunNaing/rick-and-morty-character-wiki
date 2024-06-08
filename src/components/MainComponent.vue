@@ -6,7 +6,7 @@
     <SearchComponent @filter-name="filterByName" />
 
     <div v-if="loading" class="loading-indicator">
-      <p>Loading... ({{ countdown }} seconds remaining)</p>
+      <p>Receiving the required data..... ({{ countdown }} seconds remaining)</p>
     </div>
 
     <div v-if="!loading && filteredCharacters.length > 0" class="container-cards">
