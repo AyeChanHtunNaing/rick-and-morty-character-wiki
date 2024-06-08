@@ -5,7 +5,11 @@
     <FilterComponent :activeFilter="activeFilter" @filter-status="filterByStatus" />
     <SearchComponent @filter-name="filterByName" />
 
-    <div v-if="filteredCharacters.length > 0" class="container-cards">
+    <div v-if="loading" class="loading-indicator">
+      <p>Loading... ({{ countdown }} seconds remaining)</p>
+    </div>
+
+    <div v-if="!loading && filteredCharacters.length > 0" class="container-cards">
       <ul class="card-list">
         <CharacterCardComponent 
           v-for="character in paginatedCharacters" 
@@ -15,7 +19,7 @@
       </ul>
     </div>
 
-    <div class="pagination">
+    <div v-if="!loading" class="pagination">
       <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
       <span>Page {{ currentPage }} of {{ totalPages }}</span>
       <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
@@ -43,6 +47,8 @@ export default {
       activeFilter: 'All',
       currentPage: 1,
       itemsPerPage: 20,
+      loading: true,
+      countdown: 30,
     };
   },
   computed: {
@@ -56,12 +62,23 @@ export default {
     },
   },
   mounted() {
+    this.startCountdown();
     this.fetchCharacters('https://rickandmortyapi.com/api/character/')
       .then(() => {
         this.filteredCharacters = this.characters;
+        this.loading = false;
       });
   },
   methods: {
+    startCountdown() {
+      const countdownInterval = setInterval(() => {
+        if (this.countdown > 0) {
+          this.countdown--;
+        } else {
+          clearInterval(countdownInterval);
+        }
+      }, 1000);
+    },
     fetchCharacters(url) {
       return new Promise((resolve, reject) => {
         axios.get(url)
@@ -78,8 +95,8 @@ export default {
             console.error('Error fetching character list:', error);
             reject(error);
           });
-        });
-      },
+      });
+    },
     filterByStatus(status) {
       const lowerCaseStatus = status.toLowerCase();
       this.activeFilter = status;
@@ -88,11 +105,11 @@ export default {
       } else {
         this.filteredCharacters = this.characters.filter(character => character.status.toLowerCase() === lowerCaseStatus);
       }
-      this.currentPage = 1; // Reset to first page
+      this.currentPage = 1; 
     },
     filterByName(searchTerm) {
       this.filteredCharacters = this.characters.filter(character => character.name.toLowerCase().includes(searchTerm.toLowerCase()));
-      this.currentPage = 1; // Reset to first page
+      this.currentPage = 1; 
     },
     prevPage() {
       if (this.currentPage > 1) {
@@ -122,6 +139,12 @@ h1 {
   text-align: center;
   font-size: 45px;
   margin-top: 4rem;
+}
+
+.loading-indicator {
+  font-size: 20px;
+  text-align: center;
+  margin-top: 20px;
 }
 
 .container-cards {
